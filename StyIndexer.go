@@ -2,7 +2,7 @@ package main
 
 import (
     . "github.com/getwe/goose/utils"
-    "github.com/laurent22/toml-go"
+    "github.com/getwe/goose/config"
     "github.com/getwe/scws4go"
 	"encoding/json"
     "reflect"
@@ -108,11 +108,11 @@ func (this *StyIndexer) ParseDoc(doc interface{}) (
 }
 
 // 调用一次初始化
-func (this *StyIndexer) Init(conf toml.Document) (err error) {
+func (this *StyIndexer) Init(conf config.Conf) (err error) {
 
     // scws初始化
-    scwsDictPath := conf.GetString("Strategy.Indexer.Scws.xdbdict")
-    scwsRulePath := conf.GetString("Strategy.Indexer.Scws.rules")
+    scwsDictPath := conf.String("Strategy.Indexer.Scws.xdbdict")
+    scwsRulePath := conf.String("Strategy.Indexer.Scws.rules")
     scwsForkCnt  := runtime.NumCPU()
     this.scws = scws4go.NewScws()
     err = this.scws.SetDict(scwsDictPath, scws4go.SCWS_XDICT_XDB|scws4go.SCWS_XDICT_MEM)
