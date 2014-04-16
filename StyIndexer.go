@@ -1,13 +1,14 @@
 package main
 
 import (
+    "github.com/getwe/goose"
     . "github.com/getwe/goose/utils"
     "github.com/getwe/goose/config"
     "github.com/getwe/scws4go"
 	"encoding/json"
     "reflect"
     "runtime"
-    log "github.com/alecthomas/log4go"
+    log "github.com/getwe/goose/log"
     "strconv"
     "encoding/binary"
 )
@@ -33,7 +34,7 @@ type StyIndexer struct {
 
 
 // 分析一个doc,返回其中的term列表,Value,Data.(必须保证框架可并发调用ParseDoc)
-func (this *StyIndexer) ParseDoc(doc interface{}) (
+func (this *StyIndexer) ParseDoc(doc interface{},context *goose.StyContext) (
     outId OutIdType,termList []TermInDoc,value *Value,data *Data,err error) {
     // ParseDoc的功能实现需要注意的是,这个函数是可并发的,使用StyIndexer.*需要注意安全
     defer func() {
@@ -84,6 +85,9 @@ func (this *StyIndexer) ParseDoc(doc interface{}) (
         }
         termmap[tsign] = tweight
     }
+
+    // print info log
+    context.Log.Info("termCount:%d",len(termmap))
 
     termList = make([]TermInDoc,0,len(termmap))
     for k,v := range termmap {
