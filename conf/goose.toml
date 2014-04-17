@@ -28,7 +28,7 @@ MaxProcs = 0
         rules = "dict/rules.utf8.ini"
     # 检索策略
     [Strategy.Searcher]
-        [Strategy.Indexer.Scws]
+        [Strategy.Searcher.Scws]
         xdbdict = "dict/dict.utf8.xdb"
         rules = "dict/rules.utf8.ini"
 

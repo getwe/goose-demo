@@ -35,7 +35,7 @@ type StyIndexer struct {
 
 // 分析一个doc,返回其中的term列表,Value,Data.(必须保证框架可并发调用ParseDoc)
 func (this *StyIndexer) ParseDoc(doc interface{},context *goose.StyContext) (
-    outId OutIdType,termList []TermInDoc,value *Value,data *Data,err error) {
+    outId OutIdType,termList []TermInDoc,value Value,data Data,err error) {
     // ParseDoc的功能实现需要注意的是,这个函数是可并发的,使用StyIndexer.*需要注意安全
     defer func() {
         if r := recover();r != nil {
@@ -86,7 +86,7 @@ func (this *StyIndexer) ParseDoc(doc interface{},context *goose.StyContext) (
         termmap[tsign] = tweight
     }
 
-    // print info log
+    // context.Log输出Info日志不会马上输出,而是由框架最终合并成一行输出
     context.Log.Info("termCount:%d",len(termmap))
 
     termList = make([]TermInDoc,0,len(termmap))
@@ -101,12 +101,12 @@ func (this *StyIndexer) ParseDoc(doc interface{},context *goose.StyContext) (
     value = NewValue(4)
     hot,_ := strconv.Atoi(docJson.Hot)
     order := binary.BigEndian
-    order.PutUint32(*value,uint32(hot))
+    order.PutUint32(value,uint32(hot))
 
     // 从doc中提取需要写入Data的数据
     // 简单把全部传入的数据当成data返回
     data = NewData(len(docbuf))
-    copy(*data,docbuf)
+    copy(data,docbuf)
 
     return
 }

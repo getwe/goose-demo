@@ -16,5 +16,6 @@ func main() {
 
     app := goose.NewGoose()
     app.SetIndexStrategy(new(StyIndexer))
+    app.SetSearchStrategy(new(StySearcher))
     app.Run()
 }

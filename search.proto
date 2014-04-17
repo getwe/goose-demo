@@ -1,0 +1,22 @@
+package main;
+
+// 检索命令
+message SearchRequest
+{
+    required string query = 1;
+    optional int32 pn = 2 [ default=0 ];
+    optional int32 rn = 3 [ default=10 ];
+}
+
+// 检索结果
+message SearchResponse
+{
+    message oneRes
+    {
+        required bytes data = 1;
+    }
+
+    required int32 RetNum = 1;
+    required int32 DispNum = 2;
+    repeated oneRes Result = 3;
+}
