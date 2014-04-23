@@ -6,30 +6,25 @@ import (
     . "github.com/getwe/goose/database"
     "github.com/getwe/goose/config"
     "github.com/getwe/scws4go"
-	//"encoding/json"
-    //"reflect"
     "errors"
     "runtime"
     log "github.com/getwe/goose/log"
-    //"strconv"
-    //"encoding/binary"
+    simplejson "github.com/bitly/go-simplejson"
     "sort"
-
-    "code.google.com/p/goprotobuf/proto"
+    "fmt"
 )
 
 // 策略的自定义临时数据
 type strategyData struct {
     query   string
-    pn      int32
-    rn      int32
+    pn      int
+    rn      int
 }
 
 // 检索的时候,goose框架收到一个完整的网络请求便认为是一次检索请求.
 // 框架把收到的整个网络包都传给策略,不关心具体的检索协议.
 //
-// 在这个检索demo中,检索策略以protocolbuf协议解析请求包,并从中获取用户query.
-// 具体协议见search.proto
+// 在这个检索demo中,检索策略以json协议解析请求包,并从中获取用户query.
 type StySearcher struct {
     scws    *scws4go.Scws
 }
@@ -63,16 +58,20 @@ func (this *StySearcher) ParseQuery(request []byte,
     styData:= &strategyData{}
 
     // 解析命令
-    searchReq := &SearchRequest{}
-    err := proto.Unmarshal(request, searchReq)
+    searchReq,err := simplejson.NewJson(request)
     if err != nil {
         log.Warn(err)
         return nil,nil,err
     }
 
-    styData.query = searchReq.GetQuery()
-    styData.pn = searchReq.GetPn()
-    styData.rn = searchReq.GetRn()
+
+    styData.query,err  = searchReq.Get("query").String()
+    if err != nil {
+        log.Warn(err)
+        return nil,nil,err
+    }
+    styData.pn = searchReq.Get("pn").MustInt(0)
+    styData.rn = searchReq.Get("rn").MustInt(10)
 
     context.Log.Info("query",styData.query)
 
@@ -151,27 +150,28 @@ func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
     // 分页
     begin := styData.pn * styData.rn
     end := begin + styData.rn
-    if end > int32(len(list)) {
-        end = int32(len(list))
+    if end > len(list) {
+        end = len(list)
     }
     relist := list[begin:end]
 
-    searchRes := &SearchResponse{}
-    searchRes.Result = make([]*SearchResponseOneRes,len(relist))
+    searchRes,err := simplejson.NewJson([]byte(`{}`))
+    if err != nil {
+        return errors.New("open json buf fail")
+    }
 
     tmpData := NewData()
 
-    for _,e := range relist {
+    for i,e := range relist {
         db.ReadData(e.InId,&tmpData)
-        searchRes.Result = append(searchRes.Result,&SearchResponseOneRes{
-            Data : tmpData})
+        searchRes.Set(fmt.Sprintf("result%d",i),tmpData)
     }
 
-    (*searchRes.DispNum) = int32(len(list))
-    (*searchRes.RetNum) = int32(len(relist))
+    searchRes.Set("retNum",len(relist))
+    searchRes.Set("dispNum",len(list))
 
     // 进行序列化
-    tmpbuf,err := proto.Marshal(searchRes)
+    tmpbuf,err := searchRes.Encode()
     if err != nil {
         return err
     }
