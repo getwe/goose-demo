@@ -20,6 +20,10 @@ MaxProcs = 0
     # 每个doc的Value大小,单位(B)
     ValueSize = 32
 
+[GooseSearch]
+# 检索最多使用cpu个数.0表示设置为机器的cpu数
+MaxProcs = 0
+
 [Strategy]
     # 建库策略
     [Strategy.Indexer]
