@@ -35,6 +35,10 @@ func (this *StySearcher) Init(conf config.Conf) (err error) {
     scwsDictPath := conf.String("Strategy.Searcher.Scws.xdbdict")
     scwsRulePath := conf.String("Strategy.Searcher.Scws.rules")
     scwsForkCnt  := runtime.NumCPU()
+
+    log.Debug("Searcher Strategy Init. scws dict[%s] rule[%s] cpu[%d]",
+        scwsDictPath,scwsRulePath,scwsForkCnt)
+
     this.scws = scws4go.NewScws()
     err = this.scws.SetDict(scwsDictPath, scws4go.SCWS_XDICT_XDB|scws4go.SCWS_XDICT_MEM)
     if err != nil { return }
