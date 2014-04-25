@@ -1,4 +1,6 @@
-# This is a TOML document. Boom.
+# goose配置
+# [GooseBuild]和[GooseSearch]是框架所需要的配置信息
+# 策略自定义的配置
 
 [GooseBuild]
 # 建库最多使用cpu个数.0表示设置为机器的cpu数
@@ -23,6 +25,25 @@ MaxProcs = 0
 [GooseSearch]
 # 检索最多使用cpu个数.0表示设置为机器的cpu数
 MaxProcs = 0
+
+    # 检索相关配置
+    [GooseSearch.Search]
+    # 检索并发协程数
+    GoroutineNum = 200
+    # 检索服务端口
+    ServerPort = 7788
+    # 接受请求的网络缓冲区(byte)
+    RequestBufferSize = 1024
+    # 发送请求的网络缓冲区(byte)
+    ResponseBufferSize = 1048576
+
+    # 更新相关配置
+    [GooseSearch.Index]
+    # 服务端口
+    ServerPort = 7789
+    # 接受请求的网络缓冲区(byte)
+    RequestBufferSize = 10240
+
 
 [Strategy]
     # 建库策略
