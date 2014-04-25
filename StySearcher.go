@@ -88,6 +88,7 @@ func (this *StySearcher) ParseQuery(request []byte,
 
     termInQ := make([]TermInQuery,0)
     for _,term := range segResult {
+        log.Debug("term[%s]",term.Term)
         tsign := TermSign(StringSignMd5(term.Term))
         // term重要性:取term长度占比
         tweight := TermWeight( len(term.Term) / len(styData.query) * 100 )
@@ -98,6 +99,7 @@ func (this *StySearcher) ParseQuery(request []byte,
             CanOmit : true,
             SkipOffset : true})
     }
+
 
     return termInQ,styData,nil
 }
@@ -129,6 +131,8 @@ func (this *StySearcher) CalWeight(queryInfo interface{},inId InIdType,
 // 对结果拉链进行过滤
 func (this *StySearcher) Filt(queryInfo interface{},list SearchResultList,
     context *StyContext) (error) {
+
+    log.Debug("in Filt Strategy")
     return nil
 }
 
@@ -137,6 +141,7 @@ func (this *StySearcher) Filt(queryInfo interface{},list SearchResultList,
 func (this *StySearcher) Adjust(queryInfo interface{},list SearchResultList,
     db ValueReader,context *StyContext) (error) {
 
+    log.Debug("in Adjust Strategy")
     // 不调权,直接排序返回
     sort.Sort(list)
     return nil
@@ -145,6 +150,7 @@ func (this *StySearcher) Adjust(queryInfo interface{},list SearchResultList,
 // 构建返回包
 func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
     db DataBaseReader,response []byte,context *StyContext) (err error) {
+    log.Debug("in Response Strategy")
 
     styData := queryInfo.(*strategyData)
     if styData == nil {
@@ -167,12 +173,22 @@ func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
     tmpData := NewData()
 
     for i,e := range relist {
+        // 建库把整个doc当成二进制作为Data,这里取出来后需要重新解析
         db.ReadData(e.InId,&tmpData)
-        searchRes.Set(fmt.Sprintf("result%d",i),tmpData)
+
+        doc,err := simplejson.NewJson(tmpData)
+        if err != nil {
+            context.Log.Warn(err)
+        } else {
+            searchRes.Set(fmt.Sprintf("result%d",i),doc)
+        }
     }
 
     searchRes.Set("retNum",len(relist))
     searchRes.Set("dispNum",len(list))
+
+    context.Log.Info("retNum",len(relist))
+    context.Log.Info("dispNum",len(list))
 
     // 进行序列化
     tmpbuf,err := searchRes.Encode()
