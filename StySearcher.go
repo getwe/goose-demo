@@ -164,6 +164,7 @@ func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
         end = len(list)
     }
     relist := list[begin:end]
+    context.Log.Debug("result list len[%d] range [%d:%d]",len(list),begin,end)
 
     searchRes,err := simplejson.NewJson([]byte(`{}`))
     if err != nil {
@@ -174,7 +175,13 @@ func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
 
     for i,e := range relist {
         // 建库把整个doc当成二进制作为Data,这里取出来后需要重新解析
-        db.ReadData(e.InId,&tmpData)
+        err := db.ReadData(e.InId,&tmpData)
+        if err != nil {
+            context.Log.Warn("ReadData fail[%s] InId[%d] OutId[%d]",err,e.InId,e.OutId)
+            continue
+        }
+
+        context.Log.Debug("inId[%d] weight[%d]",e.InId,e.Weight)
 
         doc,err := simplejson.NewJson(tmpData)
         if err != nil {

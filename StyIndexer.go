@@ -87,7 +87,7 @@ func (this *StyIndexer) ParseDoc(doc interface{},context *goose.StyContext) (
     }
 
     // context.Log输出Info日志不会马上输出,而是由框架最终合并成一行输出
-    context.Log.Info("termCount:%d",len(termmap))
+    context.Log.Info("termCount",len(termmap))
 
     termList = make([]TermInDoc,0,len(termmap))
     for k,v := range termmap {
