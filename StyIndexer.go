@@ -11,6 +11,7 @@ import (
     log "github.com/getwe/goose/log"
     "strconv"
     "encoding/binary"
+    "strings"
 )
 
 type oneDocJson struct {
@@ -70,7 +71,7 @@ func (this *StyIndexer) ParseDoc(doc interface{},context *goose.StyContext) (
     // 同时,对term也做去重
     termmap := make(map[TermSign]TermWeight)
     for _,term := range segResult {
-        tsign := TermSign(StringSignMd5(term.Term))
+        tsign := TermSign(StringSignMd5(strings.ToLower(term.Term)))
         tweight := TermWeight(term.Idf * 100)
         if tweight < 1 {
             tweight = 1

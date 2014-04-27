@@ -12,6 +12,7 @@ import (
     simplejson "github.com/bitly/go-simplejson"
     "sort"
     "fmt"
+    "strings"
 )
 
 // 策略的自定义临时数据
@@ -88,15 +89,16 @@ func (this *StySearcher) ParseQuery(request []byte,
 
     termInQ := make([]TermInQuery,0)
     for _,term := range segResult {
-        log.Debug("term[%s]",term.Term)
-        tsign := TermSign(StringSignMd5(term.Term))
+        tsign := TermSign(StringSignMd5(strings.ToLower(term.Term)))
         // term重要性:取term长度占比
-        tweight := TermWeight( len(term.Term) / len(styData.query) * 100 )
+        tweight := TermWeight( float32(len(term.Term)) / float32(len(styData.query)) * 100 )
+
+        log.Debug("term[%s] weight[%d]",term.Term,tweight)
 
         termInQ = append(termInQ,TermInQuery{
             Sign : tsign,
             Weight : tweight,
-            CanOmit : true,
+            CanOmit : false,
             SkipOffset : true})
     }
 
@@ -119,10 +121,12 @@ func (this *StySearcher) CalWeight(queryInfo interface{},inId InIdType,
     termCnt uint32,context *StyContext) (TermWeight,error) {
 
     // 核心相关性打分
-    // 最简单demo,把命中doc的得分相加
+    // 最简单demo,如果term命中doc的得分,则把term在query中的打分相加
     var weight TermWeight
-    for _,t := range termInDoc {
-        weight += t.Weight
+    for i,t := range termInDoc {
+        if t.Weight > 0 {
+            weight += termInQuery[i].Weight
+        }
     }
 
     return weight,nil
@@ -149,12 +153,12 @@ func (this *StySearcher) Adjust(queryInfo interface{},list SearchResultList,
 
 // 构建返回包
 func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
-    db DataBaseReader,response []byte,context *StyContext) (err error) {
+    db DataBaseReader,response []byte,context *StyContext) (reslen int,err error) {
     log.Debug("in Response Strategy")
 
     styData := queryInfo.(*strategyData)
     if styData == nil {
-        return errors.New("StrategyData nil")
+        return 0,errors.New("StrategyData nil")
     }
 
     // 分页
@@ -168,7 +172,7 @@ func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
 
     searchRes,err := simplejson.NewJson([]byte(`{}`))
     if err != nil {
-        return errors.New("open json buf fail")
+        return 0,errors.New("open json buf fail")
     }
 
     tmpData := NewData()
@@ -200,17 +204,17 @@ func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
     // 进行序列化
     tmpbuf,err := searchRes.Encode()
     if err != nil {
-        return err
+        return 0,err
     }
 
     if len(tmpbuf) > cap(response) {
-        return errors.New("respone buf too small")
+        return 0,errors.New("respone buf too small")
     }
 
     // 重复了一次内存拷贝!
     copy(response,tmpbuf)
 
-    return nil
+    return len(tmpbuf),nil
 }
 
 
