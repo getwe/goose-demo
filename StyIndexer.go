@@ -51,7 +51,7 @@ func (this *StyIndexer) ParseDoc(doc interface{},context *goose.StyContext) (
     docJson := oneDocJson{}
     err = json.Unmarshal(docbuf,&docJson)
     if err != nil {
-        err = log.Warn(string(docbuf))
+        err = log.Warn(err)
         return
     }
 

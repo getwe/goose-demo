@@ -12,7 +12,7 @@ MaxProcs = 0
     DbPath = "data/goosedemo"
     # 正排转倒排的内存缓冲区最大容纳term数量.
     # 越大越好,减少读写磁盘数,随之内存占用越多.
-    TransformMaxTermCnt = 1000000
+    TransformMaxTermCnt = 10000000
     # 索引库最大id数
     MaxId = 5000000
     # 索引文件最大文件大小,单位(B),1G = 1073741824B
@@ -29,7 +29,7 @@ MaxProcs = 0
     # 检索相关配置
     [GooseSearch.Search]
     # 检索并发协程数
-    GoroutineNum = 200
+    GoroutineNum = 100
     # 检索服务端口
     ServerPort = 7788
     # 接受请求的网络缓冲区(byte)
@@ -43,6 +43,11 @@ MaxProcs = 0
     ServerPort = 7789
     # 接受请求的网络缓冲区(byte)
     RequestBufferSize = 10240
+
+    # 定时刷新相关配置
+    [GooseSearch.Refresh]
+    # 每隔多少秒刷新一次
+    SleepTime = 10
 
 
 [Strategy]
