@@ -132,34 +132,19 @@ func (this *StySearcher) CalWeight(queryInfo interface{},inId InIdType,
     return weight,nil
 }
 
-// 对结果拉链进行过滤
-func (this *StySearcher) Filt(queryInfo interface{},list SearchResultList,
-    context *StyContext) (error) {
-
-    log.Debug("in Filt Strategy")
-    return nil
-}
-
-// 结果调权
-// 确认最终结果列表排序
-func (this *StySearcher) Adjust(queryInfo interface{},list SearchResultList,
-    db ValueReader,context *StyContext) (error) {
-
-    log.Debug("in Adjust Strategy")
-    // 不调权,直接排序返回
-    sort.Sort(list)
-    return nil
-}
-
 // 构建返回包
 func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
-    db DataBaseReader,response []byte,context *StyContext) (reslen int,err error) {
+    valueReader ValueReader,dataReader DataReader,
+    response []byte,context *StyContext) (reslen int,err error) {
     log.Debug("in Response Strategy")
 
     styData := queryInfo.(*strategyData)
     if styData == nil {
         return 0,errors.New("StrategyData nil")
     }
+
+    // 不进行额外的操作 ( 比如说读取Value进行调权) 直接排序作为结果
+    sort.Sort(list)
 
     // 分页
     begin := styData.pn * styData.rn
@@ -179,7 +164,7 @@ func (this *StySearcher) Response(queryInfo interface{},list SearchResultList,
 
     for i,e := range relist {
         // 建库把整个doc当成二进制作为Data,这里取出来后需要重新解析
-        err := db.ReadData(e.InId,&tmpData)
+        err := dataReader.ReadData(e.InId,&tmpData)
         if err != nil {
             context.Log.Warn("ReadData fail[%s] InId[%d] OutId[%d]",err,e.InId,e.OutId)
             continue
